@@ -5,7 +5,7 @@ Non-expandable subexpressions (containing /, ^, functions) are treated as atomic
 """
 
 from typing import Dict, Tuple, Set, Optional
-from ast import ASTNode, Number, Variable, BinOp, UnaryOp, FunctionCall
+from ast_nodes import ASTNode, Number, Variable, BinOp, UnaryOp, FunctionCall
 
 
 class AtomicExpr:

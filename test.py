@@ -5,7 +5,7 @@ Allows users to interactively test the mathematical expression analyzer.
 
 from lexer import tokenize
 from parser import parse
-from ast import print_ast
+from ast_nodes import print_ast
 from polynomial import normalize_expression, is_expandable
 from equality import are_equivalent
 

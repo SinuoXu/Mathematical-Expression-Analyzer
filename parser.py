@@ -17,7 +17,7 @@ Note: Unary minus has lower precedence than multiplication and power:
 
 from typing import List, Optional
 from lexer import Token, TokenType, tokenize
-from ast import ASTNode, Number, Variable, BinOp, UnaryOp, FunctionCall
+from ast_nodes import ASTNode, Number, Variable, BinOp, UnaryOp, FunctionCall
 
 
 class Parser:
