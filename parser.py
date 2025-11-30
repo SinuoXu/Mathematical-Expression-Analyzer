@@ -1,11 +1,18 @@
 """
 Parser (Syntax Analyzer) Module
 Implements recursive descent parser with operator precedence.
-Priority order:
-  1. Functions (sin, cos, tan, ln, sqrt)
-  2. Power (^)
-  3. Multiply, Divide (*, /)
-  4. Add, Subtract (+, -)
+Priority order (highest to lowest):
+  1. Primary (numbers, variables, parentheses)
+  2. Functions (sin, cos, tan, ln, sqrt)
+  3. Power (^) - right associative
+  4. Multiply, Divide (*, /)
+  5. Unary minus (-)
+  6. Add, Subtract (+, -)
+
+Note: Unary minus has lower precedence than multiplication and power:
+  - -x^2 is parsed as -(x^2), not (-x)^2
+  - -x*y is parsed as -(x*y), not (-x)*y
+  - -2*x^2 is parsed as -(2*x^2), not (-2)*x^2
 """
 
 from typing import List, Optional
@@ -54,11 +61,19 @@ class Parser:
     
     def _parse_expression(self) -> ASTNode:
         """Parse addition/subtraction (lowest precedence)."""
-        left = self._parse_term()
+        # Handle leading minus as 0 - expr
+        if self.current_token().type == TokenType.MINUS:
+            self.consume()
+            # Create 0 - expr instead of UnaryOp: -
+            zero = Number(0)
+            right = self._parse_unary()
+            left = BinOp(zero, '-', right)
+        else:
+            left = self._parse_unary()
         
         while self.current_token().type in (TokenType.PLUS, TokenType.MINUS):
             op_token = self.consume()
-            right = self._parse_term()
+            right = self._parse_unary()
             left = BinOp(left, op_token.value, right)
         
         return left
@@ -77,24 +92,19 @@ class Parser:
     
     def _parse_power(self) -> ASTNode:
         """Parse exponentiation (right-associative)."""
-        left = self._parse_unary()
+        left = self._parse_function()
         
         if self.current_token().type == TokenType.POWER:
             op_token = self.consume()
             # Right-associative: a^b^c = a^(b^c)
+            # Unary minus has lower precedence than power, so we parse power first
             right = self._parse_power()
             return BinOp(left, op_token.value, right)
         
         return left
     
-    def _parse_unary(self) -> ASTNode:
-        """Parse unary minus and function calls."""
-        # Handle unary minus
-        if self.current_token().type == TokenType.MINUS:
-            self.consume()
-            operand = self._parse_unary()
-            return UnaryOp('-', operand)
-        
+    def _parse_function(self) -> ASTNode:
+        """Parse function calls."""
         # Handle functions
         if self.current_token().type == TokenType.FUNCTION:
             func_token = self.consume()
@@ -104,6 +114,19 @@ class Parser:
             return FunctionCall(func_token.value, arg)
         
         return self._parse_primary()
+    
+    def _parse_unary(self) -> ASTNode:
+        """Parse unary minus (lower precedence than multiplication and power)."""
+        # Handle unary minus
+        if self.current_token().type == TokenType.MINUS:
+            self.consume()
+            # Unary minus has lower precedence than multiplication and power
+            # So -x^2 should be parsed as -(x^2), not (-x)^2
+            # And -x*y should be parsed as -(x*y), not (-x)*y
+            operand = self._parse_term()
+            return UnaryOp('-', operand)
+        
+        return self._parse_term()
     
     def _parse_primary(self) -> ASTNode:
         """Parse primary expressions: numbers, variables, and parenthesized expressions."""

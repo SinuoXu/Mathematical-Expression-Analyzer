@@ -21,7 +21,11 @@ class AtomicExpr:
         AtomicExpr._counter += 1
     
     def __repr__(self) -> str:
-        return f"Atom({self.id}:{self.expr_str})"
+        # Return the expression string directly without Atom() wrapper
+        return self.expr_str
+    
+    def __str__(self) -> str:
+        return self.expr_str
     
     def __eq__(self, other):
         return isinstance(other, AtomicExpr) and self.expr_str == other.expr_str
@@ -70,32 +74,64 @@ class Polynomial:
             return "0"
         
         parts = []
+        first = True
         for monomial, coeff in sorted(self.terms.items(), key=lambda x: str(x)):
             if coeff == 0:
                 continue
             
             monomial_str = self._format_monomial(monomial, coeff)
-            parts.append(monomial_str)
+            
+            if first:
+                parts.append(monomial_str)
+                first = False
+            else:
+                # For subsequent terms, handle the sign
+                if monomial_str.startswith('-'):
+                    # Negative term: use - instead of + -
+                    parts.append(f" - {monomial_str[1:]}")
+                else:
+                    # Positive term: use +
+                    parts.append(f" + {monomial_str}")
         
-        return " + ".join(parts) if parts else "0"
+        return "".join(parts) if parts else "0"
     
     @staticmethod
     def _format_monomial(monomial: frozenset, coeff: int) -> str:
-        """Format a monomial for display."""
+        """Format a monomial for display with proper parentheses."""
         if not monomial:  # Constant term
             return str(coeff)
         
-        vars_str = "*".join(
-            f"{var}^{power}" if power > 1 else str(var)
-            for var, power in sorted(monomial)
-        )
+        # Format each variable with its power
+        var_parts = []
+        has_power = False
+        for var, power in sorted(monomial):
+            if power > 1:
+                var_parts.append(f"{var}^{power}")
+                has_power = True
+            else:
+                var_parts.append(str(var))
         
+        # Join variables with *
+        if len(var_parts) == 1:
+            vars_str = var_parts[0]
+        else:
+            vars_str = "*".join(var_parts)
+        
+        # Format with coefficient
         if coeff == 1:
             return vars_str
         elif coeff == -1:
             return f"-{vars_str}"
+        elif coeff < 0:
+            # Negative coefficient: display as -abs(coeff)*vars
+            abs_coeff = abs(coeff)
+            return f"-{abs_coeff}*{vars_str}"
         else:
-            return f"{coeff}*{vars_str}"
+            # Positive coefficient: add parentheses only if vars contain ^ or multiple vars
+            if has_power or len(var_parts) > 1:
+                return f"{coeff}*({vars_str})"
+            else:
+                return f"{coeff}*{vars_str}"
     
     def __eq__(self, other):
         if not isinstance(other, Polynomial):
@@ -156,24 +192,52 @@ def is_expandable(node: ASTNode) -> bool:
         return False
 
 
-def ast_to_string(node: ASTNode) -> str:
-    """Convert AST node to string representation."""
+def ast_to_string(node: ASTNode, parent_op: str = None, is_right_of_power: bool = False) -> str:
+    """Convert AST node to string representation with minimal parentheses."""
     if isinstance(node, Number):
         return str(node.value)
     elif isinstance(node, Variable):
         return node.name
     elif isinstance(node, BinOp):
-        left_str = ast_to_string(node.left)
-        right_str = ast_to_string(node.right)
-        return f"({left_str}{node.op}{right_str})"
+        # For power operator (right-associative), add parentheses to right operand if it's also a power
+        if node.op == '^':
+            left_str = ast_to_string(node.left, node.op, False)
+            right_str = ast_to_string(node.right, node.op, True)
+            
+            # If right operand is also a power operation, add parentheses
+            if isinstance(node.right, BinOp) and node.right.op == '^':
+                right_str = f"({right_str})"
+            
+            result = f"{left_str}^{right_str}"
+        else:
+            left_str = ast_to_string(node.left, node.op, False)
+            right_str = ast_to_string(node.right, node.op, False)
+            result = f"{left_str}{node.op}{right_str}"
+        
+        # Add outer parentheses only if this is a subexpression of a higher precedence operation
+        if parent_op and needs_parens(node.op, parent_op):
+            result = f"({result})"
+        
+        return result
     elif isinstance(node, UnaryOp):
-        operand_str = ast_to_string(node.operand)
-        return f"({node.op}{operand_str})"
+        operand_str = ast_to_string(node.operand, node.op, False)
+        return f"{node.op}{operand_str}"
     elif isinstance(node, FunctionCall):
-        arg_str = ast_to_string(node.arg)
+        arg_str = ast_to_string(node.arg, None, False)
         return f"{node.func_name}({arg_str})"
     else:
         return str(node)
+
+
+def needs_parens(op: str, parent_op: str) -> bool:
+    """Check if operation needs parentheses based on parent operation."""
+    precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
+    
+    if op not in precedence or parent_op not in precedence:
+        return False
+    
+    # Need parentheses if current op has lower precedence than parent
+    return precedence[op] < precedence[parent_op]
 
 
 def expand_to_polynomial(node: ASTNode) -> Polynomial:
