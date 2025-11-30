@@ -61,15 +61,7 @@ class Parser:
     
     def _parse_expression(self) -> ASTNode:
         """Parse addition/subtraction (lowest precedence)."""
-        # Handle leading minus as 0 - expr
-        if self.current_token().type == TokenType.MINUS:
-            self.consume()
-            # Create 0 - expr instead of UnaryOp: -
-            zero = Number(0)
-            right = self._parse_unary()
-            left = BinOp(zero, '-', right)
-        else:
-            left = self._parse_unary()
+        left = self._parse_unary()
         
         while self.current_token().type in (TokenType.PLUS, TokenType.MINUS):
             op_token = self.consume()
