@@ -100,18 +100,22 @@ class Lexer:
     def _read_identifier(self):
         """Read a variable or function token."""
         start = self.pos
-        while self.pos < len(self.expression) and self.expression[self.pos].isalpha():
-            self.pos += 1
-        identifier = self.expression[start:self.pos]
         
-        if identifier in self.FUNCTIONS:
-            self.tokens.append(Token(TokenType.FUNCTION, identifier, start))
-        else:
-            # Single-letter variable
-            if len(identifier) == 1:
-                self.tokens.append(Token(TokenType.VARIABLE, identifier, start))
-            else:
-                raise ValueError(f"Invalid identifier '{identifier}' at position {start}")
+        # Try to match function names first (multi-character)
+        for func_name in sorted(self.FUNCTIONS, key=len, reverse=True):
+            if self.expression[self.pos:].startswith(func_name):
+                # Check that it's not followed by another letter (to avoid matching 'sin' in 'sine')
+                end_pos = self.pos + len(func_name)
+                if end_pos >= len(self.expression) or not self.expression[end_pos].isalpha():
+                    self.tokens.append(Token(TokenType.FUNCTION, func_name, start))
+                    self.pos = end_pos
+                    return
+        
+        # If not a function, treat as single-letter variable
+        # This allows consecutive variables like "xy" to be tokenized as "x" and "y"
+        identifier = self.expression[self.pos]
+        self.tokens.append(Token(TokenType.VARIABLE, identifier, start))
+        self.pos += 1
     
     def _handle_implicit_multiplication(self) -> List[Token]:
         """

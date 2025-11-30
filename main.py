@@ -273,5 +273,68 @@ def main():
     print("All modules working correctly!")
 
 
+def interactive_mode():
+    """
+    Interactive mode for testing expressions.
+    Allows users to:
+    1. Analyze single expressions (lexical and syntax analysis)
+    2. Compare two expressions for equivalence
+    """
+    print_section("INTERACTIVE MODE")
+    print("Welcome to the Mathematical Expression Analyzer Interactive Mode!")
+    print("\nSupported operations: +, -, *, /, ^, sin, cos, tan, ln, sqrt")
+    print("Implicit multiplication: 2x, xy, 2(x+1), (x+1)(y+1), etc.")
+    
+    while True:
+        print("\n" + "=" * 70)
+        print("Choose an option:")
+        print("  1. Analyze a single expression (lexical + syntax analysis)")
+        print("  2. Compare two expressions for equivalence")
+        print("  3. Exit")
+        print("=" * 70)
+        
+        choice = input("\nEnter your choice (1/2/3): ").strip()
+        
+        if choice == '1':
+            # Single expression analysis
+            print("\n" + "-" * 70)
+            expr = input("Enter an expression: ").strip()
+            
+            if not expr:
+                print("Error: Empty expression!")
+                continue
+            
+            print_section("LEXICAL ANALYSIS")
+            show_tokens(expr)
+            
+            print_section("SYNTAX ANALYSIS & NORMALIZATION")
+            show_tokens(expr)
+            analyze_expression(expr)
+            
+        elif choice == '2':
+            # Two expression comparison
+            print("\n" + "-" * 70)
+            expr1 = input("Enter the first expression: ").strip()
+            expr2 = input("Enter the second expression: ").strip()
+            
+            if not expr1 or not expr2:
+                print("Error: Both expressions must be non-empty!")
+                continue
+            
+            print_section("EQUIVALENCE CHECKING")
+            compare_expressions(expr1, expr2)
+            
+        elif choice == '3':
+            print("\nExiting interactive mode. Goodbye!")
+            break
+            
+        else:
+            print("\nInvalid choice! Please enter 1, 2, or 3.")
+
+
 if __name__ == "__main__":
     main()
+    
+    # Start interactive mode after running tests
+    print("\n" * 2)
+    interactive_mode()
