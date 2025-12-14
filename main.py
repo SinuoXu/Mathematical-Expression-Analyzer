@@ -53,9 +53,6 @@ def analyze_single_expression():
         
         # Stage 3: Polynomial Normalization
         print("\n[STAGE 3: POLYNOMIAL NORMALIZATION]")
-        expandable = is_expandable(ast)
-        print(f"Expandable (only +, -, *): {expandable}")
-        
         poly = normalize_expression(ast)
         print(f"Normalized form: {poly}")
         
@@ -123,9 +120,10 @@ def main():
     print("\nSupported features:")
     print("  - Operators: +, -, *, /, ^")
     print("  - Functions: sin, cos, tan, ln, sqrt")
-    print("  - Variables: single letters (a-z)")
+    print("  - Variables: single letters (a-z, A-Z)")
     print("  - Implicit multiplication: 2x, xy, 2(x+1), etc.")
     print("  - Polynomial expansion: (x+1)^2, (x+1)^3")
+    print("  - Simple equality checking: 2x + y == y + 2 * x, 0 * x == 0, etc.")
     
     while True:
         print_menu()

@@ -259,8 +259,8 @@ def create_comparison_visualization(expr1: str, expr2: str, output_path: str = "
     return output_file
 
 
-if __name__ == "__main__":
-    # Example usage
+def run_examples():
+    """Run built-in example visualizations."""
     print("AST Visualization Examples")
     print("=" * 70)
     
@@ -285,3 +285,136 @@ if __name__ == "__main__":
         print(f"\n✓ Generated comparison: {output}")
     except Exception as e:
         print(f"\n✗ Error creating comparison: {e}")
+
+
+def main():
+    """Main entry point with argument parsing."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description="AST Visualization Tool - Generate visual representations of mathematical expressions",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python visualize.py "x+1"                          # Visualize single expression
+  python visualize.py "x^2+2*x+1" -o quadratic.png   # Custom output filename
+  python visualize.py "x+1" "1+x" --compare          # Compare two expressions
+  python visualize.py --examples                     # Run built-in examples
+  python visualize.py -f png "sin(x)"                # Specify output format
+        """
+    )
+    
+    # Positional arguments for expressions
+    parser.add_argument(
+        "expression",
+        nargs="?",
+        help="Mathematical expression to visualize (e.g., 'x^2+2*x+1')"
+    )
+    parser.add_argument(
+        "expression2",
+        nargs="?",
+        help="Second expression (used with --compare)"
+    )
+    
+    # Optional arguments
+    parser.add_argument(
+        "-o", "--output",
+        default=None,
+        help="Output filename (default: ast_tree.png or auto-generated)"
+    )
+    parser.add_argument(
+        "-f", "--format",
+        default="png",
+        choices=["png", "pdf", "svg", "jpg"],
+        help="Output format (default: png)"
+    )
+    parser.add_argument(
+        "-c", "--compare",
+        action="store_true",
+        help="Compare two expressions side by side"
+    )
+    parser.add_argument(
+        "-t", "--title",
+        default=None,
+        help="Custom title for the visualization"
+    )
+    parser.add_argument(
+        "--examples",
+        action="store_true",
+        help="Run built-in example visualizations"
+    )
+    parser.add_argument(
+        "--no-title",
+        action="store_true",
+        help="Do not add expression as title"
+    )
+    
+    args = parser.parse_args()
+    
+    # Run examples mode
+    if args.examples:
+        run_examples()
+        return
+    
+    # Check if expression is provided
+    if not args.expression:
+        parser.print_help()
+        print("\nError: Please provide an expression or use --examples")
+        return
+    
+    # Comparison mode
+    if args.compare:
+        if not args.expression2:
+            print("Error: --compare requires two expressions")
+            print("Usage: python visualize.py 'expr1' 'expr2' --compare")
+            return
+        
+        output_path = args.output or "comparison.png"
+        try:
+            output = create_comparison_visualization(
+                args.expression,
+                args.expression2,
+                output_path
+            )
+            print(f"✓ Generated comparison: {output}")
+            print(f"  Expression 1: {args.expression}")
+            print(f"  Expression 2: {args.expression2}")
+        except Exception as e:
+            print(f"✗ Error: {e}")
+        return
+    
+    # Single expression visualization
+    output_path = args.output or "ast_tree.png"
+    
+    # Determine title
+    if args.no_title:
+        title = None
+    elif args.title:
+        title = args.title
+    else:
+        title = f"Expression: {args.expression}"
+    
+    try:
+        from parser import parse
+        
+        # Ensure images directory exists
+        images_dir = "images"
+        if not os.path.exists(images_dir):
+            os.makedirs(images_dir)
+        
+        # Prepend images/ to output path if not already there
+        if not output_path.startswith(images_dir + "/") and not output_path.startswith(images_dir + "\\"):
+            output_path = os.path.join(images_dir, output_path)
+        
+        ast = parse(args.expression)
+        output = render_ast(ast, output_path, format=args.format, title=title)
+        print(f"✓ Generated: {output}")
+        print(f"  Expression: {args.expression}")
+    except Exception as e:
+        print(f"✗ Error: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+if __name__ == "__main__":
+    main()

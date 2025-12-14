@@ -6,7 +6,7 @@ A complete Python implementation for analyzing, parsing, and comparing mathemati
 
 ### Supported Expression Elements
 - **Numbers**: Integer constants (positive and negative)
-- **Variables**: Single-letter variables (x, y, z, etc.)
+- **Variables**: Single-letter variables (x-z, X-Z)
 - **Operators**: 
   - Arithmetic: `+`, `-`, `*`, `/`
   - Exponentiation: `^` (with special handling for powers 2 and 3)
@@ -23,28 +23,33 @@ A complete Python implementation for analyzing, parsing, and comparing mathemati
    - **Important**: Function calls must include parentheses (e.g., `sin(x)`). Writing `sinx` will be parsed as `s*i*n*x`
 
 2. **Syntax Analysis (Parser)**
+   - Determines whether an expression is valid. Invalid cases include:
+      1. Unary minus without proper parentheses (`--x`, `x^-2`, etc.)
+      2. Mismatched parentheses (`((x)`, `(x))`, etc.)
+      3. Invalid operator usage (`x ++ 2`, `()`, etc.)
    - Recursive descent parser with proper operator precedence
    - Precedence order:
      1. Functions (sin, cos, tan, ln, sqrt)
      2. Exponentiation (^)
      3. Multiplication and Division (*, /)
-     4. Addition and Subtraction (+, -)
+     4. Addition and Subtraction / Unary minus (+, -)
 
 3. **Abstract Syntax Tree (AST)**
    - Comprehensive node types for all expression elements
-   - Pretty-printing support for debugging
+   - Pretty-printing tree structure for debugging
 
 4. **Polynomial Normalization**
    - Converts expressions into canonical polynomial form
    - Supports expansion of (expr)^2 and (expr)^3
+   - Supports simplification of (expr)^0 or (expr)^1
    - Treats non-expandable operations (/, functions, arbitrary powers) as atomic expressions
-   - Applies associativity and commutativity rules
+   - Applies associativity and commutativity rules to simplify
 
 5. **Equivalence Checking**
    - Determines if two expressions are mathematically equivalent (functional equivalence)
    - **Equivalence criterion**: Two expressions are equivalent if they produce the same result for all variable values
    - **Implementation strategy**:
-     1. Polynomial normalization for expandable expressions
+     1. Polynomial normalization
      2. Structural equality checking (considering commutativity)
      3. Rational form simplification: converts to numerator/denominator form and uses cross-multiplication
    - Supports recognition of:
@@ -55,27 +60,66 @@ A complete Python implementation for analyzing, parsing, and comparing mathemati
      - Rational equivalence: `1 - 1/x` ≡ `(x-1)/x`
 
 
-## Running Tests
+## Running
 
 ```bash
 # Run from the project root directory
 python main.py
 ```
 
-This will run comprehensive tests including:
-- Single expression analysis (tokens → AST → normalized form)
-- Equivalence testing with multiple test cases
-- Complex expression handling
-- Implicit multiplication verification
-- Interactive mode for manual testing
+This launches the interactive mode. After successful execution, the terminal will display the following interface:
+```bash
+======================================================================
+  MATHEMATICAL EXPRESSION ANALYZER - INTERACTIVE MODE
+======================================================================
 
+Please select an option:
+  1. Analyze single expression (Lexer -> Parser -> Polynomial)
+  2. Check equality of two expressions
+  3. Exit 
+----------------------------------------------------------------------
+Enter your choice (1-3)
+```
+
+### AST Visualization
+
+Generate visual AST diagrams using Graphviz:
+
+```bash
+# Visualize a single expression
+python visualize.py "x^2+2*x+1"
+
+# Specify output filename
+python visualize.py "x^2+2*x+1" -o my_expression.png
+
+# Specify output format (png/pdf/svg/jpg)
+python visualize.py "sin(x+y)" -f svg
+
+# Custom title
+python visualize.py "x+1" -t "My Custom Title"
+
+# No title
+python visualize.py "x+1" --no-title
+
+# Compare two expressions side by side
+python visualize.py "x+1" "1+x" --compare
+
+# Run built-in examples
+python visualize.py --examples
+
+# View help
+python visualize.py -h
+```
+
+> **Note**: Requires `graphviz` Python package and Graphviz system installation. See [Dependencies](#dependencies).
+
+## Testing
 ```bash
 # Run from the project root directory
 python test.py
 ```
 
-This will only run:
-- Interactive mode for manual testing
+This will run all test cases in `test_cases.json` (129 cases in total) and generate a detailed test result log file.
 
 ## Project Structure
 
@@ -86,51 +130,14 @@ Mathematical-Expression-Analyzer/
 ├── parser.py           # Syntax analyzer  
 ├── polynomial.py       # Polynomial normalization
 ├── equality.py         # Equivalence checking
-├── main.py             # Main program and tests
-├── test.py             # Additional tests
+├── visualize.py        # AST visualization tool
+├── main.py             # Interactive mode entry point
+├── test.py             # Automated test runner
+├── test_cases.json     # Test case definitions
+├── images/             # Generated AST visualizations(Some samples have already been in)
 └── README.md           # This file
 ```
 
-## Usage
-
-### Basic Expression Parsing
-
-```python
-from parser import parse
-from ast_nodes import print_ast
-
-# Parse an expression
-ast = parse("(x + 1)^2")
-
-# Display the AST
-print_ast(ast)
-```
-
-### Expression Normalization
-
-```python
-from parser import parse
-from polynomial import normalize_expression
-
-# Parse and normalize
-ast = parse("(x + 1) * (x + 1)")
-poly = normalize_expression(ast)
-
-print(poly)  # Output: 1 + 2*x + x^2
-```
-
-### Equivalence Checking
-
-```python
-from parser import parse
-from equality import are_equivalent
-
-expr1 = parse("(x + 1)^2")
-expr2 = parse("x^2 + 2x + 1")
-
-if are_equivalent(expr1, expr2):
-    print("Expressions are equivalent!")
-```
 
 ## Limitations
 
@@ -143,7 +150,27 @@ The implementation does NOT handle:
 
 ## Dependencies
 
-**None!** The entire project uses only Python standard library:
+### Required
+**None!** The core functionality uses only Python standard library:
 - `abc` - Abstract base classes
 - `enum` - Enum types
 - `typing` - Type hints
+
+### Optional (for AST Visualization)
+To use the `visualize.py` tool, install the following:
+
+```bash
+# Python package
+pip install graphviz
+
+# System installation
+# macOS:
+brew install graphviz
+
+# Ubuntu/Debian:
+sudo apt-get install graphviz
+
+# Windows:
+# Download from https://graphviz.org/download/
+# Add Graphviz bin directory to your PATH
+```
