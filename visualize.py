@@ -275,16 +275,16 @@ def run_examples():
     for expr, filename in examples:
         try:
             output = visualize_expression(expr, filename)
-            print(f"✓ Generated: {output} for expression: {expr}")
+            print(f"[OK] Generated: {output} for expression: {expr}")
         except Exception as e:
-            print(f"✗ Error for {expr}: {e}")
+            print(f"[ERROR] {expr}: {e}")
     
     # Comparison example
     try:
         output = create_comparison_visualization("x+1", "1+x", "comparison.png")
-        print(f"\n✓ Generated comparison: {output}")
+        print(f"\n[OK] Generated comparison: {output}")
     except Exception as e:
-        print(f"\n✗ Error creating comparison: {e}")
+        print(f"\n[ERROR] comparison: {e}")
 
 
 def main():
@@ -376,11 +376,11 @@ Examples:
                 args.expression2,
                 output_path
             )
-            print(f"✓ Generated comparison: {output}")
+            print(f"[OK] Generated comparison: {output}")
             print(f"  Expression 1: {args.expression}")
             print(f"  Expression 2: {args.expression2}")
         except Exception as e:
-            print(f"✗ Error: {e}")
+            print(f"[ERROR] {e}")
         return
     
     # Single expression visualization
@@ -408,10 +408,10 @@ Examples:
         
         ast = parse(args.expression)
         output = render_ast(ast, output_path, format=args.format, title=title)
-        print(f"✓ Generated: {output}")
+        print(f"[OK] Generated: {output}")
         print(f"  Expression: {args.expression}")
     except Exception as e:
-        print(f"✗ Error: {e}")
+        print(f"[ERROR] {e}")
         import traceback
         traceback.print_exc()
 
