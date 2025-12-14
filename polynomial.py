@@ -278,7 +278,25 @@ def expand_to_polynomial(node: ASTNode) -> Polynomial:
             return left * right
         
         elif node.op == '^':
-            # Handle power: only expandable if right is constant and left is expandable
+            # Handle power with special cases
+            
+            # Special case 1: x^0 = 1 (anything to the power 0 is 1)
+            if isinstance(node.right, Number) and node.right.value == 0:
+                return Polynomial({frozenset(): 1})  # Return 1
+            
+            # Special case 2: x^1 = x (anything to the power 1 is itself)
+            if isinstance(node.right, Number) and node.right.value == 1:
+                return expand_to_polynomial(node.left)
+            
+            # Special case 3: 0^x = 0 (zero to any positive power is 0)
+            if isinstance(node.left, Number) and node.left.value == 0:
+                return Polynomial()  # Return 0
+            
+            # Special case 4: 1^x = 1 (one to any power is 1)
+            if isinstance(node.left, Number) and node.left.value == 1:
+                return Polynomial({frozenset(): 1})  # Return 1
+            
+            # Handle power: expandable if right is constant 2 or 3
             if isinstance(node.right, Number) and node.right.value in (2, 3):
                 base = expand_to_polynomial(node.left)
                 result = base

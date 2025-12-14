@@ -1,234 +1,165 @@
 """
-Main Module - Simplified Testing
-Two main tasks:
-1. Analyze Expression: Show tokens and AST
-2. Check Equivalence: Compare two expressions
+Interactive Test Program
+Allows users to interactively test the mathematical expression analyzer.
 """
 
 from lexer import tokenize
 from parser import parse
 from ast_nodes import print_ast
-from polynomial import normalize_expression
-from equality import are_equivalent, check_equivalence_verbose
+from polynomial import normalize_expression, is_expandable
+from equality import are_equivalent
 
 
-def print_section(title: str):
-    """Print a formatted section header."""
-    print(f"\n{'=' * 70}")
-    print(f"  {title}")
-    print(f"{'=' * 70}")
+def print_menu():
+    """Display the main menu."""
+    print("\n" + "=" * 70)
+    print("  MATHEMATICAL EXPRESSION ANALYZER - INTERACTIVE MODE")
+    print("=" * 70)
+    print("\nPlease select an option:")
+    print("  1. Analyze single expression (Lexer -> Parser -> Polynomial)")
+    print("  2. Check equality of two expressions")
+    print("  3. Exit")
+    print("-" * 70)
 
 
-def analyze_expression(expr_str: str):
-    """
-    Task 1: Analyze a single expression
-    Shows: Tokens (table) → AST → Normalized Form
+def analyze_single_expression():
+    """Analyze a single expression through all stages."""
+    print("\n" + "=" * 70)
+    print("  SINGLE EXPRESSION ANALYSIS")
+    print("=" * 70)
     
-    Args:
-        expr_str: Expression string to analyze
-    """
-    print(f"\n[Expression: {expr_str}]")
+    expr = input("\nEnter expression: ").strip()
+    
+    if not expr:
+        print("Error: Empty expression")
+        return
+    
+    print(f"\nAnalyzing: {expr}")
     print("-" * 70)
     
     try:
-        # Tokenize - show as table
-        tokens = tokenize(expr_str)
+        # Stage 1: Lexical Analysis
+        print("\n[STAGE 1: LEXICAL ANALYSIS]")
+        tokens = tokenize(expr)
         print("Tokens:")
         for token in tokens:
-            token_type = token.type.name
-            # Highlight implicit multiplication
-            if token.type.name == 'IMPLICIT_MULTIPLY':
-                token_type = f"*{token_type}*"
-            print(f"  {token_type:22} | value={repr(token.value):10} | pos={token.pos}")
+            print(f"  {token.type.name:12} | value={repr(token.value):10} | pos={token.pos}")
         
-        # Parse to AST
-        ast = parse(expr_str)
-        print("\nAST:")
+        # Stage 2: Syntax Analysis (Parsing)
+        print("\n[STAGE 2: SYNTAX ANALYSIS]")
+        ast = parse(expr)
+        print("Abstract Syntax Tree:")
         print_ast(ast, indent=2)
         
-        # Normalize
+        # Stage 3: Polynomial Normalization
+        print("\n[STAGE 3: POLYNOMIAL NORMALIZATION]")
+        expandable = is_expandable(ast)
+        print(f"Expandable (only +, -, *): {expandable}")
+        
         poly = normalize_expression(ast)
-        # print(f"\nNormalized: {poly}")
+        print(f"Normalized form: {poly}")
+        
+        print("\n" + "=" * 70)
+        print("Analysis complete!")
         
     except Exception as e:
-        print(f"✗ Error: {e}")
+        print(f"\nError: {e}")
+        import traceback
+        traceback.print_exc()
 
 
-def check_equivalence(expr1_str: str, expr2_str: str):
-    """
-    Task 2: Check if two expressions are equivalent
-    Shows: Expression 1, Expression 2 → Result
+def check_equality():
+    """Check if two expressions are equivalent."""
+    print("\n" + "=" * 70)
+    print("  EXPRESSION EQUALITY CHECK")
+    print("=" * 70)
     
-    Args:
-        expr1_str: First expression string
-        expr2_str: Second expression string
-    """
+    expr1 = input("\nEnter first expression: ").strip()
+    expr2 = input("Enter second expression: ").strip()
+    
+    if not expr1 or not expr2:
+        print("Error: Both expressions must be non-empty")
+        return
+    
+    print(f"\nComparing:")
+    print(f"  Expression 1: {expr1}")
+    print(f"  Expression 2: {expr2}")
+    print("-" * 70)
+    
     try:
-        ast1 = parse(expr1_str)
-        ast2 = parse(expr2_str)
+        # Parse both expressions
+        print("\n[Parsing Expression 1]")
+        ast1 = parse(expr1)
+        poly1 = normalize_expression(ast1)
+        print(f"Normalized: {poly1}")
         
-        is_equiv, method, details = check_equivalence_verbose(ast1, ast2)
+        print("\n[Parsing Expression 2]")
+        ast2 = parse(expr2)
+        poly2 = normalize_expression(ast2)
+        print(f"Normalized: {poly2}")
         
-        status = "✓ EQUIVALENT" if is_equiv else "✗ NOT EQUIVALENT"
-        print(f"{expr1_str:20} ≟ {expr2_str:20} → {status} ({method})")
+        # Check equivalence
+        print("\n[Equivalence Check]")
+        is_equiv = are_equivalent(ast1, ast2)
         
-        return is_equiv
+        print("-" * 70)
+        if is_equiv:
+            print("✓ RESULT: The expressions are EQUIVALENT")
+        else:
+            print("✗ RESULT: The expressions are NOT EQUIVALENT")
+        print("-" * 70)
+        
     except Exception as e:
-        print(f"{expr1_str:20} ≟ {expr2_str:20} → ✗ ERROR: {e}")
-        return False
+        print(f"\nError: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def main():
-    """Run organized test cases."""
-    
-    print_section("MATHEMATICAL EXPRESSION ANALYZER")
-    print("Two main tasks: (1) Analyze Expression  (2) Check Equivalence")
-    
-    # ========== TASK 1: EXPRESSION ANALYSIS ==========
-    print_section("TASK 1: EXPRESSION ANALYSIS")
-    print("Shows: Tokens → AST → Normalized Form\n")
-    
-    analysis_tests = [
-        # Basic expressions
-        "x + 1",
-        "2x",
-        "x^2",
-        
-        # Polynomial expansion
-        "(x+1)^2",
-        "x^2 + 2x + 1",
-        
-        # Functions
-        "sin(x)",
-        "sin(x+y)",
-        
-        # Complex expressions
-        "x^2 / 2",
-        "1 - 1/x",
-        
-        # Implicit multiplication
-        "2(x+1)",
-        "xy",
-        "sin(x)cos(x)",
-    ]
-    
-    for expr in analysis_tests:
-        analyze_expression(expr)
-    
-    # ========== TASK 2: EQUIVALENCE CHECKING ==========
-    print_section("TASK 2: EQUIVALENCE CHECKING")
-    print("Format: Expression1 ≟ Expression2 → Result\n")
-    
-    equivalence_tests = [
-        # Commutativity
-        ("x + 1", "1 + x"),
-        ("x * y", "y * x"),
-        ("sin(x) + cos(x)", "cos(x) + sin(x)"),
-        
-        # Polynomial expansion
-        ("(x+1)^2", "x^2 + 2x + 1"),
-        ("(x+y)^2", "x^2 + 2xy + y^2"),
-        ("(x+1)^3", "x^3 + 3x^2 + 3x + 1"),
-        
-        # Distributivity
-        ("2(x+1)", "2x + 2"),
-        ("x(y+z)", "xy + xz"),
-        
-        # Associativity
-        ("(x+y)+z", "x+(y+z)"),
-        ("(x*y)*z", "x*(y*z)"),
-        
-        # Rational functions
-        ("1-1/x", "(x-1)/x"),
-        ("x/x", "1"),
-        ("2/x + 3/x", "5/x"),
-        
-        # Function arguments
-        ("sin(x+y)", "sin(y+x)"),
-        ("ln(x*y)", "ln(y*x)"),
-        
-        # Implicit multiplication
-        ("2x", "x*2"),
-        ("xy", "x*y"),
-        ("2(x+1)", "2*(x+1)"),
-        
-        # Non-equivalent cases
-        ("x+1", "x+2"),
-        ("x^2", "x^3"),
-        ("sin(x)", "cos(x)"),
-    ]
-    
-    print("Testing equivalence...")
-    correct = 0
-    total = len(equivalence_tests)
-    
-    for expr1, expr2 in equivalence_tests:
-        result = check_equivalence(expr1, expr2)
-        if result is not None:
-            correct += 1
-    
-    print(f"\n{correct}/{total} tests completed successfully")
-    
-    # ========== SPECIAL CASES ==========
-    print_section("SPECIAL CASES")
-    print("Edge cases and complex scenarios\n")
-    
-    special_tests = [
-        ("0 + x", "x", "Identity: 0+x = x"),
-        ("x * 1", "x", "Identity: x*1 = x"),
-        ("x + 0", "x", "Identity: x+0 = x"),
-        ("x*y + x*z", "x*(y+z)", "Factorization"),
-        ("(x^2-1)/(x-1)", "x+1", "Rational simplification"),
-        ("sin(x)*cos(x)", "cos(x)*sin(x)", "Function commutativity"),
-    ]
-    
-    for expr1, expr2, desc in special_tests:
-        print(f"[{desc}]")
-        check_equivalence(expr1, expr2)
-    
-    print_section("TESTING COMPLETE")
-
-
-def interactive_mode():
-    """
-    Interactive mode for testing expressions.
-    """
-    print_section("INTERACTIVE MODE")
-    print("Choose a task:")
-    print("  1. Analyze expression (tokens + AST)")
-    print("  2. Check equivalence")
-    print("  3. Exit")
+    """Main interactive loop."""
+    print("\n" + "=" * 70)
+    print("  Welcome to the Mathematical Expression Analyzer!")
+    print("=" * 70)
+    print("\nSupported features:")
+    print("  - Operators: +, -, *, /, ^")
+    print("  - Functions: sin, cos, tan, ln, sqrt")
+    print("  - Variables: single letters (a-z)")
+    print("  - Implicit multiplication: 2x, xy, 2(x+1), etc.")
+    print("  - Polynomial expansion: (x+1)^2, (x+1)^3")
     
     while True:
-        print("\n" + "-" * 70)
-        choice = input("Enter choice (1/2/3): ").strip()
+        print_menu()
         
-        if choice == '1':
-            expr = input("Enter expression: ").strip()
-            if expr:
-                analyze_expression(expr)
-            else:
-                print("✗ Empty expression")
-                
-        elif choice == '2':
-            expr1 = input("Enter first expression: ").strip()
-            expr2 = input("Enter second expression: ").strip()
-            if expr1 and expr2:
-                check_equivalence(expr1, expr2)
-            else:
-                print("✗ Both expressions required")
-                
-        elif choice == '3':
-            print("\nGoodbye!")
-            break
+        try:
+            choice = input("Enter your choice (1-3): ").strip()
             
-        else:
-            print("✗ Invalid choice")
+            if choice == '1':
+                analyze_single_expression()
+            
+            elif choice == '2':
+                check_equality()
+            
+            elif choice == '3':
+                print("\n" + "=" * 70)
+                print("  Thank you for using the Expression Analyzer!")
+                print("=" * 70)
+                break
+            
+            else:
+                print("\nInvalid choice. Please enter 1, 2, or 3.")
+        
+        except KeyboardInterrupt:
+            print("\n\nInterrupted by user.")
+            print("\n" + "=" * 70)
+            print("  Thank you for using the Expression Analyzer!")
+            print("=" * 70)
+            break
+        
+        except Exception as e:
+            print(f"\nUnexpected error: {e}")
+            import traceback
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
     main()
-    
-    # Uncomment to enable interactive mode
-    print("\n" * 2)
-    interactive_mode()

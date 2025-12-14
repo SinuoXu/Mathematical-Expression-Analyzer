@@ -1,0 +1,1532 @@
+================================================================================
+数学表达式分析器 - 测试报告
+================================================================================
+测试时间: 2025-12-14 12:56:26
+测试配置: test_cases.json
+LOG 输出: test_results_20251214_125626.log
+================================================================================
+
+================================================================================
+  数学表达式分析器 - 自动化测试系统
+================================================================================
+测试配置文件: test_cases.json
+包含两个主要任务:
+  - Task 1: 表达式分析 (分词 + AST)
+  - Task 2: 等价性检查
+
+================================================================================
+  TASK 1: 表达式分析 (分词 + AST)
+================================================================================
+说明: Task 1: 表达式分析 - 分词和AST生成
+
+
+--------------------------------------------------------------------------------
+  分类: 基础表达式 (6 个测试)
+--------------------------------------------------------------------------------
+
+表达式: x + 1
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  PLUS                   | value='+'        | pos=2
+  NUMBER                 | value=1          | pos=4
+  EOF                    | value=None       | pos=5
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        Variable: x
+      Right:
+        Number: 1
+
+✓ 规范化成功: 1 + x
+
+表达式: 2x
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=2          | pos=0
+  *IMPLICIT_MULTIPLY*    | value='*'        | pos=1
+  VARIABLE               | value='x'        | pos=1
+  EOF                    | value=None       | pos=2
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        Number: 2
+      Right:
+        Variable: x
+
+✓ 规范化成功: 2*x
+
+表达式: x^2
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  POWER                  | value='^'        | pos=1
+  NUMBER                 | value=2          | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        Variable: x
+      Right:
+        Number: 2
+
+✓ 规范化成功: x^2
+
+表达式: x - y
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  MINUS                  | value='-'        | pos=2
+  VARIABLE               | value='y'        | pos=4
+  EOF                    | value=None       | pos=5
+
+🌳 语法分析 (AST):
+    BinOp: -
+      Left:
+        Variable: x
+      Right:
+        Variable: y
+
+✓ 规范化成功: x - y
+
+表达式: 3*x
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=3          | pos=0
+  MULTIPLY               | value='*'        | pos=1
+  VARIABLE               | value='x'        | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        Number: 3
+      Right:
+        Variable: x
+
+✓ 规范化成功: 3*x
+
+表达式: x/2
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  DIVIDE                 | value='/'        | pos=1
+  NUMBER                 | value=2          | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: /
+      Left:
+        Variable: x
+      Right:
+        Number: 2
+
+✓ 规范化成功: x/2
+
+--------------------------------------------------------------------------------
+  分类: 多项式展开 (3 个测试)
+--------------------------------------------------------------------------------
+
+表达式: (x+1)^2
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  PLUS                   | value='+'        | pos=2
+  NUMBER                 | value=1          | pos=3
+  RPAREN                 | value=')'        | pos=4
+  POWER                  | value='^'        | pos=5
+  NUMBER                 | value=2          | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Number: 1
+      Right:
+        Number: 2
+
+✓ 规范化成功: 1 + 2*x + x^2
+
+表达式: (x+y)^2
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  PLUS                   | value='+'        | pos=2
+  VARIABLE               | value='y'        | pos=3
+  RPAREN                 | value=')'        | pos=4
+  POWER                  | value='^'        | pos=5
+  NUMBER                 | value=2          | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Variable: y
+      Right:
+        Number: 2
+
+✓ 规范化成功: x^2 + 2*(x*y) + y^2
+
+表达式: (x-1)^2
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  MINUS                  | value='-'        | pos=2
+  NUMBER                 | value=1          | pos=3
+  RPAREN                 | value=')'        | pos=4
+  POWER                  | value='^'        | pos=5
+  NUMBER                 | value=2          | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        BinOp: -
+          Left:
+            Variable: x
+          Right:
+            Number: 1
+      Right:
+        Number: 2
+
+✓ 规范化成功: 1 - 2*x + x^2
+
+--------------------------------------------------------------------------------
+  分类: 函数调用 (4 个测试)
+--------------------------------------------------------------------------------
+
+表达式: sin(x)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  FUNCTION               | value='sin'      | pos=0
+  LPAREN                 | value='('        | pos=3
+  VARIABLE               | value='x'        | pos=4
+  RPAREN                 | value=')'        | pos=5
+  EOF                    | value=None       | pos=6
+
+🌳 语法分析 (AST):
+    FunctionCall: sin
+      Argument:
+        Variable: x
+
+✓ 规范化成功: sin(x)
+
+表达式: cos(x+y)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  FUNCTION               | value='cos'      | pos=0
+  LPAREN                 | value='('        | pos=3
+  VARIABLE               | value='x'        | pos=4
+  PLUS                   | value='+'        | pos=5
+  VARIABLE               | value='y'        | pos=6
+  RPAREN                 | value=')'        | pos=7
+  EOF                    | value=None       | pos=8
+
+🌳 语法分析 (AST):
+    FunctionCall: cos
+      Argument:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Variable: y
+
+✓ 规范化成功: cos(x+y)
+
+表达式: ln(x)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  FUNCTION               | value='ln'       | pos=0
+  LPAREN                 | value='('        | pos=2
+  VARIABLE               | value='x'        | pos=3
+  RPAREN                 | value=')'        | pos=4
+  EOF                    | value=None       | pos=5
+
+🌳 语法分析 (AST):
+    FunctionCall: ln
+      Argument:
+        Variable: x
+
+✓ 规范化成功: ln(x)
+
+表达式: sqrt(x^2)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  FUNCTION               | value='sqrt'     | pos=0
+  LPAREN                 | value='('        | pos=4
+  VARIABLE               | value='x'        | pos=5
+  POWER                  | value='^'        | pos=6
+  NUMBER                 | value=2          | pos=7
+  RPAREN                 | value=')'        | pos=8
+  EOF                    | value=None       | pos=9
+
+🌳 语法分析 (AST):
+    FunctionCall: sqrt
+      Argument:
+        BinOp: ^
+          Left:
+            Variable: x
+          Right:
+            Number: 2
+
+✓ 规范化成功: sqrt(x^2)
+
+--------------------------------------------------------------------------------
+  分类: 复杂表达式 (4 个测试)
+--------------------------------------------------------------------------------
+
+表达式: x^2 / 2
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  POWER                  | value='^'        | pos=1
+  NUMBER                 | value=2          | pos=2
+  DIVIDE                 | value='/'        | pos=4
+  NUMBER                 | value=2          | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: /
+      Left:
+        BinOp: ^
+          Left:
+            Variable: x
+          Right:
+            Number: 2
+      Right:
+        Number: 2
+
+✓ 规范化成功: x^2/2
+
+表达式: 1 - 1/x
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=1          | pos=0
+  MINUS                  | value='-'        | pos=2
+  NUMBER                 | value=1          | pos=4
+  DIVIDE                 | value='/'        | pos=5
+  VARIABLE               | value='x'        | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: -
+      Left:
+        Number: 1
+      Right:
+        BinOp: /
+          Left:
+            Number: 1
+          Right:
+            Variable: x
+
+✓ 规范化成功: 1 - 1/x
+
+表达式: x^3 + 2x^2 - x + 1
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  POWER                  | value='^'        | pos=1
+  NUMBER                 | value=3          | pos=2
+  PLUS                   | value='+'        | pos=4
+  NUMBER                 | value=2          | pos=6
+  *IMPLICIT_MULTIPLY*    | value='*'        | pos=7
+  VARIABLE               | value='x'        | pos=7
+  POWER                  | value='^'        | pos=8
+  NUMBER                 | value=2          | pos=9
+  MINUS                  | value='-'        | pos=11
+  VARIABLE               | value='x'        | pos=13
+  PLUS                   | value='+'        | pos=15
+  NUMBER                 | value=1          | pos=17
+  EOF                    | value=None       | pos=18
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        BinOp: -
+          Left:
+            BinOp: +
+              Left:
+                BinOp: ^
+                  Left:
+                    Variable: x
+                  Right:
+                    Number: 3
+              Right:
+                BinOp: *
+                  Left:
+                    Number: 2
+                  Right:
+                    BinOp: ^
+                      Left:
+                        Variable: x
+                      Right:
+                        Number: 2
+          Right:
+            Variable: x
+      Right:
+        Number: 1
+
+✓ 规范化成功: 1 - x + 2*(x^2) + x^3
+
+表达式: (x+1)*(x-1)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  PLUS                   | value='+'        | pos=2
+  NUMBER                 | value=1          | pos=3
+  RPAREN                 | value=')'        | pos=4
+  MULTIPLY               | value='*'        | pos=5
+  LPAREN                 | value='('        | pos=6
+  VARIABLE               | value='x'        | pos=7
+  MINUS                  | value='-'        | pos=8
+  NUMBER                 | value=1          | pos=9
+  RPAREN                 | value=')'        | pos=10
+  EOF                    | value=None       | pos=11
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Number: 1
+      Right:
+        BinOp: -
+          Left:
+            Variable: x
+          Right:
+            Number: 1
+
+✓ 规范化成功: -1 + x^2
+
+--------------------------------------------------------------------------------
+  分类: 隐式乘法 (5 个测试)
+--------------------------------------------------------------------------------
+
+表达式: 2(x+1)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=2          | pos=0
+  *IMPLICIT_MULTIPLY*    | value='*'        | pos=1
+  LPAREN                 | value='('        | pos=1
+  VARIABLE               | value='x'        | pos=2
+  PLUS                   | value='+'        | pos=3
+  NUMBER                 | value=1          | pos=4
+  RPAREN                 | value=')'        | pos=5
+  EOF                    | value=None       | pos=6
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        Number: 2
+      Right:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Number: 1
+
+✓ 规范化成功: 2 + 2*x
+
+表达式: xy
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  *IMPLICIT_MULTIPLY*    | value='*'        | pos=1
+  VARIABLE               | value='y'        | pos=1
+  EOF                    | value=None       | pos=2
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        Variable: x
+      Right:
+        Variable: y
+
+✓ 规范化成功: x*y
+
+表达式: sin(x)cos(x)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  FUNCTION               | value='sin'      | pos=0
+  LPAREN                 | value='('        | pos=3
+  VARIABLE               | value='x'        | pos=4
+  RPAREN                 | value=')'        | pos=5
+  *IMPLICIT_MULTIPLY*    | value='*'        | pos=6
+  FUNCTION               | value='cos'      | pos=6
+  LPAREN                 | value='('        | pos=9
+  VARIABLE               | value='x'        | pos=10
+  RPAREN                 | value=')'        | pos=11
+  EOF                    | value=None       | pos=12
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        FunctionCall: sin
+          Argument:
+            Variable: x
+      Right:
+        FunctionCall: cos
+          Argument:
+            Variable: x
+
+✓ 规范化成功: cos(x)*sin(x)
+
+表达式: 3x^2
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=3          | pos=0
+  *IMPLICIT_MULTIPLY*    | value='*'        | pos=1
+  VARIABLE               | value='x'        | pos=1
+  POWER                  | value='^'        | pos=2
+  NUMBER                 | value=2          | pos=3
+  EOF                    | value=None       | pos=4
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        Number: 3
+      Right:
+        BinOp: ^
+          Left:
+            Variable: x
+          Right:
+            Number: 2
+
+✓ 规范化成功: 3*(x^2)
+
+表达式: x(y+z)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  *IMPLICIT_MULTIPLY*    | value='*'        | pos=1
+  LPAREN                 | value='('        | pos=1
+  VARIABLE               | value='y'        | pos=2
+  PLUS                   | value='+'        | pos=3
+  VARIABLE               | value='z'        | pos=4
+  RPAREN                 | value=')'        | pos=5
+  EOF                    | value=None       | pos=6
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        Variable: x
+      Right:
+        BinOp: +
+          Left:
+            Variable: y
+          Right:
+            Variable: z
+
+✓ 规范化成功: x*y + x*z
+
+--------------------------------------------------------------------------------
+  分类: 一元负号 (5 个测试)
+--------------------------------------------------------------------------------
+
+表达式: -x
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  MINUS                  | value='-'        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  EOF                    | value=None       | pos=2
+
+🌳 语法分析 (AST):
+    UnaryOp: -
+      Operand:
+        Variable: x
+
+✓ 规范化成功: -x
+
+表达式: -x^2
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  MINUS                  | value='-'        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  POWER                  | value='^'        | pos=2
+  NUMBER                 | value=2          | pos=3
+  EOF                    | value=None       | pos=4
+
+🌳 语法分析 (AST):
+    UnaryOp: -
+      Operand:
+        BinOp: ^
+          Left:
+            Variable: x
+          Right:
+            Number: 2
+
+✓ 规范化成功: -x^2
+
+表达式: -(x+1)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  MINUS                  | value='-'        | pos=0
+  LPAREN                 | value='('        | pos=1
+  VARIABLE               | value='x'        | pos=2
+  PLUS                   | value='+'        | pos=3
+  NUMBER                 | value=1          | pos=4
+  RPAREN                 | value=')'        | pos=5
+  EOF                    | value=None       | pos=6
+
+🌳 语法分析 (AST):
+    UnaryOp: -
+      Operand:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Number: 1
+
+✓ 规范化成功: -1 - x
+
+表达式: -sin(x)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  MINUS                  | value='-'        | pos=0
+  FUNCTION               | value='sin'      | pos=1
+  LPAREN                 | value='('        | pos=4
+  VARIABLE               | value='x'        | pos=5
+  RPAREN                 | value=')'        | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    UnaryOp: -
+      Operand:
+        FunctionCall: sin
+          Argument:
+            Variable: x
+
+✓ 规范化成功: -sin(x)
+
+表达式: x + (-y)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  PLUS                   | value='+'        | pos=2
+  LPAREN                 | value='('        | pos=4
+  MINUS                  | value='-'        | pos=5
+  VARIABLE               | value='y'        | pos=6
+  RPAREN                 | value=')'        | pos=7
+  EOF                    | value=None       | pos=8
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        Variable: x
+      Right:
+        UnaryOp: -
+          Operand:
+            Variable: y
+
+✓ 规范化成功: x - y
+
+--------------------------------------------------------------------------------
+  分类: 嵌套括号 (3 个测试)
+--------------------------------------------------------------------------------
+
+表达式: ((x))
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  LPAREN                 | value='('        | pos=1
+  VARIABLE               | value='x'        | pos=2
+  RPAREN                 | value=')'        | pos=3
+  RPAREN                 | value=')'        | pos=4
+  EOF                    | value=None       | pos=5
+
+🌳 语法分析 (AST):
+    Variable: x
+
+✓ 规范化成功: x
+
+表达式: (x+(y+z))
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  PLUS                   | value='+'        | pos=2
+  LPAREN                 | value='('        | pos=3
+  VARIABLE               | value='y'        | pos=4
+  PLUS                   | value='+'        | pos=5
+  VARIABLE               | value='z'        | pos=6
+  RPAREN                 | value=')'        | pos=7
+  RPAREN                 | value=')'        | pos=8
+  EOF                    | value=None       | pos=9
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        Variable: x
+      Right:
+        BinOp: +
+          Left:
+            Variable: y
+          Right:
+            Variable: z
+
+✓ 规范化成功: x + y + z
+
+表达式: ((x+y)*(x-y))
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  LPAREN                 | value='('        | pos=1
+  VARIABLE               | value='x'        | pos=2
+  PLUS                   | value='+'        | pos=3
+  VARIABLE               | value='y'        | pos=4
+  RPAREN                 | value=')'        | pos=5
+  MULTIPLY               | value='*'        | pos=6
+  LPAREN                 | value='('        | pos=7
+  VARIABLE               | value='x'        | pos=8
+  MINUS                  | value='-'        | pos=9
+  VARIABLE               | value='y'        | pos=10
+  RPAREN                 | value=')'        | pos=11
+  RPAREN                 | value=')'        | pos=12
+  EOF                    | value=None       | pos=13
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Variable: y
+      Right:
+        BinOp: -
+          Left:
+            Variable: x
+          Right:
+            Variable: y
+
+✓ 规范化成功: x^2 - y^2
+
+--------------------------------------------------------------------------------
+  分类: 边界条件 - 单项 (5 个测试)
+--------------------------------------------------------------------------------
+
+表达式: 0
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=0          | pos=0
+  EOF                    | value=None       | pos=1
+
+🌳 语法分析 (AST):
+    Number: 0
+
+✓ 规范化成功: 0
+
+表达式: 1
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=1          | pos=0
+  EOF                    | value=None       | pos=1
+
+🌳 语法分析 (AST):
+    Number: 1
+
+✓ 规范化成功: 1
+
+表达式: x
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  EOF                    | value=None       | pos=1
+
+🌳 语法分析 (AST):
+    Variable: x
+
+✓ 规范化成功: x
+
+表达式: 42
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=42         | pos=0
+  EOF                    | value=None       | pos=2
+
+🌳 语法分析 (AST):
+    Number: 42
+
+✓ 规范化成功: 42
+
+表达式: -5
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  MINUS                  | value='-'        | pos=0
+  NUMBER                 | value=5          | pos=1
+  EOF                    | value=None       | pos=2
+
+🌳 语法分析 (AST):
+    UnaryOp: -
+      Operand:
+        Number: 5
+
+✓ 规范化成功: -5
+
+--------------------------------------------------------------------------------
+  分类: 边界条件 - 运算符优先级 (5 个测试)
+--------------------------------------------------------------------------------
+
+表达式: x+y*z
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  PLUS                   | value='+'        | pos=1
+  VARIABLE               | value='y'        | pos=2
+  MULTIPLY               | value='*'        | pos=3
+  VARIABLE               | value='z'        | pos=4
+  EOF                    | value=None       | pos=5
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        Variable: x
+      Right:
+        BinOp: *
+          Left:
+            Variable: y
+          Right:
+            Variable: z
+
+✓ 规范化成功: x + y*z
+
+表达式: x*y+z
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  MULTIPLY               | value='*'        | pos=1
+  VARIABLE               | value='y'        | pos=2
+  PLUS                   | value='+'        | pos=3
+  VARIABLE               | value='z'        | pos=4
+  EOF                    | value=None       | pos=5
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        BinOp: *
+          Left:
+            Variable: x
+          Right:
+            Variable: y
+      Right:
+        Variable: z
+
+✓ 规范化成功: x*y + z
+
+表达式: x^2+y^2
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  POWER                  | value='^'        | pos=1
+  NUMBER                 | value=2          | pos=2
+  PLUS                   | value='+'        | pos=3
+  VARIABLE               | value='y'        | pos=4
+  POWER                  | value='^'        | pos=5
+  NUMBER                 | value=2          | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        BinOp: ^
+          Left:
+            Variable: x
+          Right:
+            Number: 2
+      Right:
+        BinOp: ^
+          Left:
+            Variable: y
+          Right:
+            Number: 2
+
+✓ 规范化成功: x^2 + y^2
+
+表达式: x+y^2*z
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  PLUS                   | value='+'        | pos=1
+  VARIABLE               | value='y'        | pos=2
+  POWER                  | value='^'        | pos=3
+  NUMBER                 | value=2          | pos=4
+  MULTIPLY               | value='*'        | pos=5
+  VARIABLE               | value='z'        | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        Variable: x
+      Right:
+        BinOp: *
+          Left:
+            BinOp: ^
+              Left:
+                Variable: y
+              Right:
+                Number: 2
+          Right:
+            Variable: z
+
+✓ 规范化成功: x + y^2*z
+
+表达式: (x+y)^2*z
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  PLUS                   | value='+'        | pos=2
+  VARIABLE               | value='y'        | pos=3
+  RPAREN                 | value=')'        | pos=4
+  POWER                  | value='^'        | pos=5
+  NUMBER                 | value=2          | pos=6
+  MULTIPLY               | value='*'        | pos=7
+  VARIABLE               | value='z'        | pos=8
+  EOF                    | value=None       | pos=9
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        BinOp: ^
+          Left:
+            BinOp: +
+              Left:
+                Variable: x
+              Right:
+                Variable: y
+          Right:
+            Number: 2
+      Right:
+        Variable: z
+
+✓ 规范化成功: x^2*z + 2*(x*y*z) + y^2*z
+
+--------------------------------------------------------------------------------
+  分类: 边界条件 - 复杂嵌套 (5 个测试)
+--------------------------------------------------------------------------------
+
+表达式: sin(cos(x))
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  FUNCTION               | value='sin'      | pos=0
+  LPAREN                 | value='('        | pos=3
+  FUNCTION               | value='cos'      | pos=4
+  LPAREN                 | value='('        | pos=7
+  VARIABLE               | value='x'        | pos=8
+  RPAREN                 | value=')'        | pos=9
+  RPAREN                 | value=')'        | pos=10
+  EOF                    | value=None       | pos=11
+
+🌳 语法分析 (AST):
+    FunctionCall: sin
+      Argument:
+        FunctionCall: cos
+          Argument:
+            Variable: x
+
+✓ 规范化成功: sin(cos(x))
+
+表达式: sin(x^2)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  FUNCTION               | value='sin'      | pos=0
+  LPAREN                 | value='('        | pos=3
+  VARIABLE               | value='x'        | pos=4
+  POWER                  | value='^'        | pos=5
+  NUMBER                 | value=2          | pos=6
+  RPAREN                 | value=')'        | pos=7
+  EOF                    | value=None       | pos=8
+
+🌳 语法分析 (AST):
+    FunctionCall: sin
+      Argument:
+        BinOp: ^
+          Left:
+            Variable: x
+          Right:
+            Number: 2
+
+✓ 规范化成功: sin(x^2)
+
+表达式: x^(2+1)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  POWER                  | value='^'        | pos=1
+  LPAREN                 | value='('        | pos=2
+  NUMBER                 | value=2          | pos=3
+  PLUS                   | value='+'        | pos=4
+  NUMBER                 | value=1          | pos=5
+  RPAREN                 | value=')'        | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        Variable: x
+      Right:
+        BinOp: +
+          Left:
+            Number: 2
+          Right:
+            Number: 1
+
+✓ 规范化成功: x^(2+1)
+
+表达式: (x^2)^3
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  POWER                  | value='^'        | pos=2
+  NUMBER                 | value=2          | pos=3
+  RPAREN                 | value=')'        | pos=4
+  POWER                  | value='^'        | pos=5
+  NUMBER                 | value=3          | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        BinOp: ^
+          Left:
+            Variable: x
+          Right:
+            Number: 2
+      Right:
+        Number: 3
+
+✓ 规范化成功: x^6
+
+表达式: ln(sin(x))
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  FUNCTION               | value='ln'       | pos=0
+  LPAREN                 | value='('        | pos=2
+  FUNCTION               | value='sin'      | pos=3
+  LPAREN                 | value='('        | pos=6
+  VARIABLE               | value='x'        | pos=7
+  RPAREN                 | value=')'        | pos=8
+  RPAREN                 | value=')'        | pos=9
+  EOF                    | value=None       | pos=10
+
+🌳 语法分析 (AST):
+    FunctionCall: ln
+      Argument:
+        FunctionCall: sin
+          Argument:
+            Variable: x
+
+✓ 规范化成功: ln(sin(x))
+
+--------------------------------------------------------------------------------
+  分类: 边界条件 - 多变量 (4 个测试)
+--------------------------------------------------------------------------------
+
+表达式: xyz
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  *IMPLICIT_MULTIPLY*    | value='*'        | pos=1
+  VARIABLE               | value='y'        | pos=1
+  *IMPLICIT_MULTIPLY*    | value='*'        | pos=2
+  VARIABLE               | value='z'        | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        BinOp: *
+          Left:
+            Variable: x
+          Right:
+            Variable: y
+      Right:
+        Variable: z
+
+✓ 规范化成功: x*y*z
+
+表达式: x+y+z
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  PLUS                   | value='+'        | pos=1
+  VARIABLE               | value='y'        | pos=2
+  PLUS                   | value='+'        | pos=3
+  VARIABLE               | value='z'        | pos=4
+  EOF                    | value=None       | pos=5
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Variable: y
+      Right:
+        Variable: z
+
+✓ 规范化成功: x + y + z
+
+表达式: x*y*z
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  MULTIPLY               | value='*'        | pos=1
+  VARIABLE               | value='y'        | pos=2
+  MULTIPLY               | value='*'        | pos=3
+  VARIABLE               | value='z'        | pos=4
+  EOF                    | value=None       | pos=5
+
+🌳 语法分析 (AST):
+    BinOp: *
+      Left:
+        BinOp: *
+          Left:
+            Variable: x
+          Right:
+            Variable: y
+      Right:
+        Variable: z
+
+✓ 规范化成功: x*y*z
+
+表达式: x+y*z
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  PLUS                   | value='+'        | pos=1
+  VARIABLE               | value='y'        | pos=2
+  MULTIPLY               | value='*'        | pos=3
+  VARIABLE               | value='z'        | pos=4
+  EOF                    | value=None       | pos=5
+
+🌳 语法分析 (AST):
+    BinOp: +
+      Left:
+        Variable: x
+      Right:
+        BinOp: *
+          Left:
+            Variable: y
+          Right:
+            Variable: z
+
+✓ 规范化成功: x + y*z
+
+--------------------------------------------------------------------------------
+  分类: 边界条件 - 分数和有理式 (5 个测试)
+--------------------------------------------------------------------------------
+
+表达式: 1/x
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=1          | pos=0
+  DIVIDE                 | value='/'        | pos=1
+  VARIABLE               | value='x'        | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: /
+      Left:
+        Number: 1
+      Right:
+        Variable: x
+
+✓ 规范化成功: 1/x
+
+表达式: x/y
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  DIVIDE                 | value='/'        | pos=1
+  VARIABLE               | value='y'        | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: /
+      Left:
+        Variable: x
+      Right:
+        Variable: y
+
+✓ 规范化成功: x/y
+
+表达式: (x+1)/(x-1)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  LPAREN                 | value='('        | pos=0
+  VARIABLE               | value='x'        | pos=1
+  PLUS                   | value='+'        | pos=2
+  NUMBER                 | value=1          | pos=3
+  RPAREN                 | value=')'        | pos=4
+  DIVIDE                 | value='/'        | pos=5
+  LPAREN                 | value='('        | pos=6
+  VARIABLE               | value='x'        | pos=7
+  MINUS                  | value='-'        | pos=8
+  NUMBER                 | value=1          | pos=9
+  RPAREN                 | value=')'        | pos=10
+  EOF                    | value=None       | pos=11
+
+🌳 语法分析 (AST):
+    BinOp: /
+      Left:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Number: 1
+      Right:
+        BinOp: -
+          Left:
+            Variable: x
+          Right:
+            Number: 1
+
+✓ 规范化成功: (x+1)/(x-1)
+
+表达式: 1/(x+1)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=1          | pos=0
+  DIVIDE                 | value='/'        | pos=1
+  LPAREN                 | value='('        | pos=2
+  VARIABLE               | value='x'        | pos=3
+  PLUS                   | value='+'        | pos=4
+  NUMBER                 | value=1          | pos=5
+  RPAREN                 | value=')'        | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: /
+      Left:
+        Number: 1
+      Right:
+        BinOp: +
+          Left:
+            Variable: x
+          Right:
+            Number: 1
+
+✓ 规范化成功: 1/(x+1)
+
+表达式: x/(y+z)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  DIVIDE                 | value='/'        | pos=1
+  LPAREN                 | value='('        | pos=2
+  VARIABLE               | value='y'        | pos=3
+  PLUS                   | value='+'        | pos=4
+  VARIABLE               | value='z'        | pos=5
+  RPAREN                 | value=')'        | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: /
+      Left:
+        Variable: x
+      Right:
+        BinOp: +
+          Left:
+            Variable: y
+          Right:
+            Variable: z
+
+✓ 规范化成功: x/(y+z)
+
+--------------------------------------------------------------------------------
+  分类: 边界条件 - 幂次 (5 个测试)
+--------------------------------------------------------------------------------
+
+表达式: x^0
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  POWER                  | value='^'        | pos=1
+  NUMBER                 | value=0          | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        Variable: x
+      Right:
+        Number: 0
+
+✓ 规范化成功: 1
+
+表达式: x^1
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  POWER                  | value='^'        | pos=1
+  NUMBER                 | value=1          | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        Variable: x
+      Right:
+        Number: 1
+
+✓ 规范化成功: x
+
+表达式: 2^x
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  NUMBER                 | value=2          | pos=0
+  POWER                  | value='^'        | pos=1
+  VARIABLE               | value='x'        | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        Number: 2
+      Right:
+        Variable: x
+
+✓ 规范化成功: 2^x
+
+表达式: x^x
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  POWER                  | value='^'        | pos=1
+  VARIABLE               | value='x'        | pos=2
+  EOF                    | value=None       | pos=3
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        Variable: x
+      Right:
+        Variable: x
+
+✓ 规范化成功: x^x
+
+表达式: x^(y^z)
+----------------------------------------------------------------------
+📝 词法分析 (Tokens):
+  VARIABLE               | value='x'        | pos=0
+  POWER                  | value='^'        | pos=1
+  LPAREN                 | value='('        | pos=2
+  VARIABLE               | value='y'        | pos=3
+  POWER                  | value='^'        | pos=4
+  VARIABLE               | value='z'        | pos=5
+  RPAREN                 | value=')'        | pos=6
+  EOF                    | value=None       | pos=7
+
+🌳 语法分析 (AST):
+    BinOp: ^
+      Left:
+        Variable: x
+      Right:
+        BinOp: ^
+          Left:
+            Variable: y
+          Right:
+            Variable: z
+
+✓ 规范化成功: x^(y^z)
+
+--------------------------------------------------------------------------------
+  Task 1 汇总
+--------------------------------------------------------------------------------
+总计: 59 个测试
+✓ 成功: 59
+✗ 失败: 0
+
+================================================================================
+  TASK 2: 等价性检查
+================================================================================
+说明: Task 2: 等价性检查 - 判断两个表达式是否相等
+
+
+--------------------------------------------------------------------------------
+  分类: 交换律 (4 个测试)
+--------------------------------------------------------------------------------
+✓ x + 1                     ≟ 1 + x                     → ✓ 等价     (polynomial)
+✓ x * y                     ≟ y * x                     → ✓ 等价     (polynomial)
+✓ sin(x) + cos(x)           ≟ cos(x) + sin(x)           → ✓ 等价     (polynomial)
+✓ x + y + z                 ≟ z + y + x                 → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 多项式展开 (5 个测试)
+--------------------------------------------------------------------------------
+✓ (x+1)^2                   ≟ x^2 + 2x + 1              → ✓ 等价     (polynomial)
+✓ (x+y)^2                   ≟ x^2 + 2xy + y^2           → ✓ 等价     (polynomial)
+✓ (x+1)^3                   ≟ x^3 + 3x^2 + 3x + 1       → ✓ 等价     (polynomial)
+✓ (x-1)^2                   ≟ x^2 - 2x + 1              → ✓ 等价     (polynomial)
+✓ (x+1)*(x-1)               ≟ x^2 - 1                   → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 分配律 (4 个测试)
+--------------------------------------------------------------------------------
+✓ 2(x+1)                    ≟ 2x + 2                    → ✓ 等价     (polynomial)
+✓ x(y+z)                    ≟ xy + xz                   → ✓ 等价     (polynomial)
+✓ (x+y)*z                   ≟ xz + yz                   → ✓ 等价     (polynomial)
+✓ x(x+1)                    ≟ x^2 + x                   → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 结合律 (2 个测试)
+--------------------------------------------------------------------------------
+✓ (x+y)+z                   ≟ x+(y+z)                   → ✓ 等价     (polynomial)
+✓ (x*y)*z                   ≟ x*(y*z)                   → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 有理式化简 (5 个测试)
+--------------------------------------------------------------------------------
+✓ 1-1/x                     ≟ (x-1)/x                   → ✓ 等价     (rational)
+✓ x/x                       ≟ 1                         → ✓ 等价     (rational)
+✓ 2/x + 3/x                 ≟ 5/x                       → ✓ 等价     (rational)
+✓ x/2 + x/2                 ≟ x                         → ✓ 等价     (rational)
+✓ (x+1)/x                   ≟ 1 + 1/x                   → ✓ 等价     (rational)
+
+--------------------------------------------------------------------------------
+  分类: 函数参数 (4 个测试)
+--------------------------------------------------------------------------------
+✓ sin(x+y)                  ≟ sin(y+x)                  → ✓ 等价     (structural)
+✓ ln(x*y)                   ≟ ln(y*x)                   → ✓ 等价     (structural)
+✓ cos(2x)                   ≟ cos(x*2)                  → ✓ 等价     (structural)
+✓ sin(x+0)                  ≟ sin(x)                    → ✓ 等价     (structural)
+
+--------------------------------------------------------------------------------
+  分类: 隐式乘法 (5 个测试)
+--------------------------------------------------------------------------------
+✓ 2x                        ≟ x*2                       → ✓ 等价     (polynomial)
+✓ xy                        ≟ x*y                       → ✓ 等价     (polynomial)
+✓ 2(x+1)                    ≟ 2*(x+1)                   → ✓ 等价     (polynomial)
+✓ 3xy                       ≟ 3*x*y                     → ✓ 等价     (polynomial)
+✓ 2x^2                      ≟ 2*(x^2)                   → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 恒等元 (3 个测试)
+--------------------------------------------------------------------------------
+✓ x + 0                     ≟ x                         → ✓ 等价     (polynomial)
+✓ x * 1                     ≟ x                         → ✓ 等价     (polynomial)
+✓ x - 0                     ≟ x                         → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 零元 (2 个测试)
+--------------------------------------------------------------------------------
+✓ x * 0                     ≟ 0                         → ✓ 等价     (polynomial)
+✓ 0 * x                     ≟ 0                         → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 一元负号 (4 个测试)
+--------------------------------------------------------------------------------
+✓ -x + x                    ≟ 0                         → ✓ 等价     (polynomial)
+✓ -(x+y)                    ≟ -x-y                      → ✓ 等价     (polynomial)
+✓ -2*x                      ≟ -(2*x)                    → ✓ 等价     (polynomial)
+✓ (-1)*x                    ≟ -x                        → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 幂次运算 (3 个测试)
+--------------------------------------------------------------------------------
+✓ x^1                       ≟ x                         → ✓ 等价     (polynomial)
+✓ x^2*x                     ≟ x^3                       → ✓ 等价     (polynomial)
+✓ x*x                       ≟ x^2                       → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 因式分解 (4 个测试)
+--------------------------------------------------------------------------------
+✓ x*y + x*z                 ≟ x*(y+z)                   → ✓ 等价     (polynomial)
+✓ x^2 + x                   ≟ x*(x+1)                   → ✓ 等价     (polynomial)
+✓ 2x + 2y                   ≟ 2*(x+y)                   → ✓ 等价     (polynomial)
+✓ xy + xz + x               ≟ x*(y+z+1)                 → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 复合展开 (4 个测试)
+--------------------------------------------------------------------------------
+✓ (x+1)*(x+2)               ≟ x^2 + 3x + 2              → ✓ 等价     (polynomial)
+✓ (x+y)*(x-y)               ≟ x^2 - y^2                 → ✓ 等价     (polynomial)
+✓ (2x+1)^2                  ≟ 4x^2 + 4x + 1             → ✓ 等价     (polynomial)
+✓ x(x+1)(x-1)               ≟ x^3 - x                   → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 边界条件 - 幂次特殊情况 (3 个测试)
+--------------------------------------------------------------------------------
+✓ x^0                       ≟ 1                         → ✓ 等价     (polynomial)
+✓ 1^x                       ≟ 1                         → ✓ 等价     (polynomial)
+✓ x^1                       ≟ x                         → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 边界条件 - 分数运算 (3 个测试)
+--------------------------------------------------------------------------------
+✓ 1/(1/x)                   ≟ x                         → ✓ 等价     (rational)
+✓ (x/y)/z                   ≟ x/(y*z)                   → ✓ 等价     (rational)
+✓ x/(y/z)                   ≟ x*z/y                     → ✓ 等价     (rational)
+
+--------------------------------------------------------------------------------
+  分类: 边界条件 - 负数运算 (2 个测试)
+--------------------------------------------------------------------------------
+✓ -(-x+y)                   ≟ x-y                       → ✓ 等价     (polynomial)
+✓ -(x-y)                    ≟ -x+y                      → ✓ 等价     (polynomial)
+
+--------------------------------------------------------------------------------
+  分类: 不等价 - 不同系数 (3 个测试)
+--------------------------------------------------------------------------------
+✓ x+1                       ≟ x+2                       → ✗ 不等价    (rational)
+✓ 2x                        ≟ 3x                        → ✗ 不等价    (rational)
+✓ x^2                       ≟ 2*x^2                     → ✗ 不等价    (rational)
+
+--------------------------------------------------------------------------------
+  分类: 不等价 - 不同幂次 (3 个测试)
+--------------------------------------------------------------------------------
+✓ x^2                       ≟ x^3                       → ✗ 不等价    (rational)
+✓ x                         ≟ x^2                       → ✗ 不等价    (rational)
+✓ x^2 + x                   ≟ x^3 + x                   → ✗ 不等价    (rational)
+
+--------------------------------------------------------------------------------
+  分类: 不等价 - 不同函数 (2 个测试)
+--------------------------------------------------------------------------------
+✓ sin(x)                    ≟ cos(x)                    → ✗ 不等价    (rational)
+✓ ln(x)                     ≟ sqrt(x)                   → ✗ 不等价    (rational)
+
+--------------------------------------------------------------------------------
+  分类: 不等价 - 不同结构 (3 个测试)
+--------------------------------------------------------------------------------
+✓ x+y                       ≟ x*y                       → ✗ 不等价    (rational)
+✓ x^2                       ≟ 2*x                       → ✗ 不等价    (rational)
+✓ x/y                       ≟ y/x                       → ✗ 不等价    (rational)
+
+--------------------------------------------------------------------------------
+  分类: 不等价 - 函数参数不同 (2 个测试)
+--------------------------------------------------------------------------------
+✓ sin(x)                    ≟ sin(y)                    → ✗ 不等价    (rational)
+✓ sin(x)                    ≟ sin(x+1)                  → ✗ 不等价    (rational)
+
+--------------------------------------------------------------------------------
+  Task 2 汇总
+--------------------------------------------------------------------------------
+总计: 70 个测试
+✓ 正确: 70
+✗ 错误: 0
+
+================================================================================
+  测试完成
+================================================================================
+
+✓ LOG 文件已保存到: test_results_20251214_125626.log
